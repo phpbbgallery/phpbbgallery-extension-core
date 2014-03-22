@@ -206,14 +206,14 @@ class file
 	public function check_auth()
 	{
 		// Check permissions
-		if (($this->data['image_user_id'] != $this->user->data['user_id']) && ($this->data['image_status'] == \phpbbgallery\core\image\image::STATUS_ORPHAN))
+		if (($this->data['image_user_id'] != $this->user->data['user_id']) && ($this->data['image_status'] == \phpbbgallery\core\image\utility::STATUS_ORPHAN))
 		{
 			// The image is currently being uploaded
 			// trigger_error('NOT_AUTHORISED');
 			$this->error = 'not_authorised.jpg';
 		}
 
-		if ((!$this->auth->acl_check('i_view', $this->data['album_id'], $this->data['album_user_id'])) || (!$this->auth->acl_check('m_status', $this->data['album_id'], $this->data['album_user_id']) && ($this->data['image_status'] == \phpbbgallery\core\image\image::STATUS_UNAPPROVED)))
+		if ((!$this->auth->acl_check('i_view', $this->data['album_id'], $this->data['album_user_id'])) || (!$this->auth->acl_check('m_status', $this->data['album_id'], $this->data['album_user_id']) && ($this->data['image_status'] == \phpbbgallery\core\image\utility::STATUS_UNAPPROVED)))
 		{
 			// Missing permissions
 			// trigger_error('NOT_AUTHORISED');

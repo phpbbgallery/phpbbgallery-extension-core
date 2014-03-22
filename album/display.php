@@ -21,6 +21,7 @@ class display
 	protected $template;
 	protected $user;
 	protected $gallery_auth;
+	protected $image_utility;
 	protected $gallery_user;
 	protected $root_path;
 	protected $php_ext;
@@ -29,7 +30,7 @@ class display
 	protected $table_moderators;
 	protected $table_tracking;
 
-	public function __construct(\phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver $db, \phpbb\pagination $pagination, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\user $gallery_user, $root_path, $php_ext, $albums_table, $contests_table, $moderators_table, $tracking_table)
+	public function __construct(\phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver $db, \phpbb\pagination $pagination, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\image\utility $gallery_image, \phpbbgallery\core\user $gallery_user, $root_path, $php_ext, $albums_table, $contests_table, $moderators_table, $tracking_table)
 	{
 		$this->auth = $auth;
 		$this->config = $config;
@@ -40,6 +41,7 @@ class display
 		$this->user = $user;
 		$this->pagination = $pagination;
 		$this->gallery_auth = $gallery_auth;
+		$this->image_utility = $gallery_image;
 		$this->gallery_user = $gallery_user;
 		$this->root_path = $root_path;
 		$this->php_ext = $php_ext;
@@ -634,17 +636,16 @@ class display
 			// Create last post link information, if appropriate
 			if ($row['album_last_image_id'])
 			{
+				$lastimage_name = $row['album_last_image_name'];
 				$lastimage_time = $this->user->format_date($row['album_last_image_time']);
+				$lastimage_image_id = $row['album_last_image_id'];
 				$lastimage_album_type = $row['album_type_last_image'];
 				$lastimage_contest_marked = $row['album_contest_marked'];
-				// phpbb_ext_gallery_core_image::generate_link('fake_thumbnail', $phpbb_ext_gallery->config->get('link_thumbnail'), $lastimage_image_id, $lastimage_name, $lastimage_album_id);
-				$lastimage_uc_fake_thumbnail = $this->helper->route('phpbbgallery_image_file_mini', array('image_id' => $row['album_last_image_id']));
-				// phpbb_ext_gallery_core_image::generate_link('thumbnail', $phpbb_ext_gallery->config->get('link_thumbnail'), $lastimage_image_id, $lastimage_name, $lastimage_album_id);
-				$lastimage_uc_thumbnail = $this->helper->route('phpbbgallery_image_file_mini', array('image_id' => $row['album_last_image_id']));
-				// phpbb_ext_gallery_core_image::generate_link('image_name', $phpbb_ext_gallery->config->get('link_image_name'), $lastimage_image_id, $lastimage_name, $lastimage_album_id);
-				$lastimage_uc_name = '';//@todo phpbb_ext_gallery_core_image::generate_link('image_name', $phpbb_ext_gallery->config->get('link_image_name'), $lastimage_image_id, $lastimage_name, $lastimage_album_id);
-				// phpbb_ext_gallery_core_image::generate_link('lastimage_icon', $phpbb_ext_gallery->config->get('link_image_icon'), $lastimage_image_id, $lastimage_name, $lastimage_album_id);
-				$lastimage_uc_icon = '';//@todo phpbb_ext_gallery_core_image::generate_link('lastimage_icon', $phpbb_ext_gallery->config->get('link_image_icon'), $lastimage_image_id, $lastimage_name, $lastimage_album_id);
+
+				$lastimage_uc_fake_thumbnail = $this->image_utility->generate_link('fake_thumbnail', $this->config['phpbb_gallery_link_thumbnail'], $lastimage_image_id, $lastimage_name);
+				$lastimage_uc_thumbnail = $this->image_utility->generate_link('thumbnail', $this->config['phpbb_gallery_link_thumbnail'], $lastimage_image_id, $lastimage_name);
+				$lastimage_uc_name = $this->image_utility->generate_link('image_name', $this->config['phpbb_gallery_link_image_name'], $lastimage_image_id, $lastimage_name);
+				$lastimage_uc_icon = $this->image_utility->generate_link('lastimage_icon', $this->config['phpbb_gallery_link_image_icon'], $lastimage_image_id, $lastimage_name);
 			}
 			else
 			{

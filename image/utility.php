@@ -10,7 +10,7 @@
 
 namespace phpbbgallery\core\image;
 
-class image
+class utility
 {
 	/**
 	* Only visible for moderators.
@@ -41,6 +41,13 @@ class image
 	* The image is element of an open contest. Only moderators can see the user_name of the user.
 	*/
 	const IN_CONTEST = 1;
+
+	public function __construct(\phpbb\config\config $config, \phpbb\controller\helper $controller_helper, \phpbb\event\dispatcher $dispatcher)
+	{
+		$this->config = $config;
+		$this->helper = $controller_helper;
+		$this->dispatcher = $dispatcher;
+	}
 
 	public function get_new_author_info($username)
 	{
@@ -179,31 +186,27 @@ class image
 	* Generate link to image
 	*
 	* @param	string	$content	what's in the link: image_name, thumbnail, fake_thumbnail, medium or lastimage_icon
-	* @param	string	$mode		where does the link leed to: highslide, lytebox, lytebox_slide_show, image_page, image, none
+	* @param	string	$mode		where does the link lead to: highslide, lytebox, lytebox_slide_show, image_page, image, none
 	* @param	int		$image_id
 	* @param	string	$image_name
-	* @param	int		$album_id
 	* @param	bool	$is_gif		we need to know whether we display a gif, so we can use a better medium-image
-	* @param	bool	$count		shall the image-link be counted as view? (Set to false from image_page.php to deny double increment)
-	* @param	string	$additional_parameters		additional parameters for the url, (starting with &amp;)
+	* @param	array	$additional_parameters		additional parameters for the url
 	*/
-	public function generate_link($content, $mode, $image_id, $image_name, $album_id, $is_gif = false, $count = true, $additional_parameters = '', $next_image = 0)
+	public function generate_link($content, $mode, $image_id, $image_name, $is_gif = false, $additional_parameters = array())
 	{
-		global $user;
-		global $phpbb_ext_gallery;//@todo: 
+		$image_page_url = $this->helper->route('phpbbgallery_image', array_merge(array('image_id' => $image_id), $additional_parameters));
+		$image_url = $this->helper->route('phpbbgallery_image_file_source', array_merge(array('image_id' => $image_id), $additional_parameters));
+		$thumb_url = $this->helper->route('phpbbgallery_image_file_mini', array_merge(array('image_id' => $image_id), $additional_parameters));
+		$medium_url = $this->helper->route('phpbbgallery_image_file_medium', array_merge(array('image_id' => $image_id), $additional_parameters));
 
-		$image_page_url = $phpbb_ext_gallery->url->append_sid('image_page', "album_id=$album_id&amp;image_id=$image_id{$additional_parameters}");
-		$image_url = $phpbb_ext_gallery->url->append_sid('image', "album_id=$album_id&amp;image_id=$image_id{$additional_parameters}" . ((!$count) ? '&amp;view=no_count' : ''));
-		$thumb_url = $phpbb_ext_gallery->url->append_sid('image', "mode=thumbnail&amp;album_id=$album_id&amp;image_id=$image_id{$additional_parameters}");
-		$medium_url = $phpbb_ext_gallery->url->append_sid('image', "mode=medium&amp;album_id=$album_id&amp;image_id=$image_id{$additional_parameters}");
 		switch ($content)
 		{
 			case 'image_name':
-				$shorten_image_name = (utf8_strlen(htmlspecialchars_decode($image_name)) > $phpbb_ext_gallery->config->get('shortnames') + 3) ? (utf8_substr(htmlspecialchars_decode($image_name), 0, $phpbb_ext_gallery->config->get('shortnames')) . '...') : ($image_name);
+				$shorten_image_name = (utf8_strlen(htmlspecialchars_decode($image_name)) > $this->config['phpbb_gallery_shortnames'] + 3) ? (utf8_substr(htmlspecialchars_decode($image_name), 0, $this->config['phpbb_gallery_shortnames']) . '...') : ($image_name);
 				$content = '<span style="font-weight: bold;">' . $shorten_image_name . '</span>';
 			break;
 			case 'image_name_unbold':
-				$shorten_image_name = (utf8_strlen(htmlspecialchars_decode($image_name)) > $phpbb_ext_gallery->config->get('shortnames') + 3) ? (utf8_substr(htmlspecialchars_decode($image_name), 0, $phpbb_ext_gallery->config->get('shortnames')) . '...') : ($image_name);
+				$shorten_image_name = (utf8_strlen(htmlspecialchars_decode($image_name)) > $this->config['phpbb_gallery_shortnames'] + 3) ? (utf8_substr(htmlspecialchars_decode($image_name), 0, $this->config['phpbb_gallery_shortnames']) . '...') : ($image_name);
 				$content = $shorten_image_name;
 			break;
 			case 'thumbnail':
@@ -212,7 +215,7 @@ class image
 			break;
 			case 'fake_thumbnail':
 				$content = '<img src="{U_THUMBNAIL}" alt="{IMAGE_NAME}" title="{IMAGE_NAME}" style="max-width: {FAKE_THUMB_SIZE}px; max-height: {FAKE_THUMB_SIZE}px;" />';
-				$content = str_replace(array('{U_THUMBNAIL}', '{IMAGE_NAME}', '{FAKE_THUMB_SIZE}'), array($thumb_url, $image_name, $phpbb_ext_gallery->config->get('mini_thumbnail_size')), $content);
+				$content = str_replace(array('{U_THUMBNAIL}', '{IMAGE_NAME}', '{FAKE_THUMB_SIZE}'), array($thumb_url, $image_name, $this->config['phpbb_gallery_mini_thumbnail_size']), $content);
 			break;
 			case 'medium':
 				$content = '<img src="{U_MEDIUM}" alt="{IMAGE_NAME}" title="{IMAGE_NAME}" />';
@@ -221,11 +224,8 @@ class image
 				if ($is_gif)
 				{
 					$content = '<img src="{U_MEDIUM}" alt="{IMAGE_NAME}" title="{IMAGE_NAME}" style="max-width: {MEDIUM_WIDTH_SIZE}px; max-height: {MEDIUM_HEIGHT_SIZE}px;" />';
-					$content = str_replace(array('{U_MEDIUM}', '{IMAGE_NAME}', '{MEDIUM_HEIGHT_SIZE}', '{MEDIUM_WIDTH_SIZE}'), array($image_url, $image_name, $phpbb_ext_gallery->config->get('medium_height'), $phpbb_ext_gallery->config->get('medium_width')), $content);
+					$content = str_replace(array('{U_MEDIUM}', '{IMAGE_NAME}', '{MEDIUM_HEIGHT_SIZE}', '{MEDIUM_WIDTH_SIZE}'), array($image_url, $image_name, $this->config['phpbb_gallery_medium_height'], $this->config['phpbb_gallery_medium_width']), $content);
 				}
-			break;
-			case 'lastimage_icon':
-				$content = $user->img('icon_topic_latest', 'VIEW_LATEST_IMAGE');
 			break;
 		}
 
@@ -249,26 +249,11 @@ class image
 			case 'none':
 				$tpl = '{CONTENT}';
 			break;
-			case 'next':
-				if ($next_image)
-				{
-					$url = $phpbb_ext_gallery->url->append_sid('image_page', "album_id=$album_id&amp;image_id=$next_image{$additional_parameters}");
-					$tpl = '<a href="{IMAGE_URL}" title="{IMAGE_NAME}">{CONTENT}</a>';
-				}
-				else
-				{
-					$tpl = '{CONTENT}';
-				}
-			break;
 			default:
 				$url = $image_url;
-				global $phpbb_dispatcher;
-
-
 				$tpl = '{CONTENT}';
-
 				$vars = array('mode', 'tpl');
-				extract($phpbb_dispatcher->trigger_event('gallery.image.generate_link', compact($vars)));//@todo: Correctly identify the event
+				extract($this->dispatcher->trigger_event('gallery.image.generate_link', compact($vars)));
 			break;
 		}
 

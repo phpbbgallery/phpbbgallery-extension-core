@@ -557,12 +557,12 @@ class user
 
 			if ($config['allow_birthdays'] && !empty($row['user_birthday']))
 			{
+				$now = $user->create_datetime();
+				$now = phpbb_gmgetdate($now->getTimestamp() + $now->getOffset());
 				list($bday_day, $bday_month, $bday_year) = array_map('intval', explode('-', $row['user_birthday']));
 
 				if ($bday_year)
 				{
-					$now = getdate(time() + $user->timezone + $user->dst - date('Z'));
-
 					$diff = $now['mon'] - $bday_month;
 					if ($diff == 0)
 					{
