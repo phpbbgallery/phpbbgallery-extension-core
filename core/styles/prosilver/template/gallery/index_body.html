@@ -3,7 +3,7 @@
 <p class="{S_CONTENT_FLOW_END}<!-- IF S_USER_LOGGED_IN --> rightside<!-- ENDIF -->"><!-- IF S_USER_LOGGED_IN -->{LAST_VISIT_DATE}<!-- ELSE -->{CURRENT_TIME}<!-- ENDIF --></p>
 <!-- IF U_MCP --><p>{CURRENT_TIME} <br />[&nbsp;<a href="{U_MCP}">{L_MCP}</a>&nbsp;]</p><!-- ELSEIF S_USER_LOGGED_IN --><p>{CURRENT_TIME}</p><!-- ENDIF -->
 
-<!-- IF S_USER_LOGGED_IN and not S_IS_BOT -->
+<!-- IF S_USER_LOGGED_IN and not S_IS_BOT and U_MARK_ALBUMS -->
 <ul class="linklist">
 	<li class="rightside">
 		<div class="dropdown-container dropdown-button-control topic-tools dropdown-right dropdown-down">
@@ -11,22 +11,8 @@
 			<div class="dropdown hidden">
 				<div class="pointer"><div class="pointer-inner"></div></div>
 				<ul class="dropdown-contents">
-					<!-- IF not S_IS_BOT and U_MARK_ALBUMS -->
+					<!-- IF U_MARK_ALBUMS -->
 						<li><a href="{U_MARK_ALBUMS}" accesskey="m">{L_MARK_ALBUMS_READ}</a></li>
-					<!-- ENDIF -->
-					<li><a href="{U_GALLERY_SEARCH}">{L_SEARCH}</a></li>
-					<li><a href="{U_G_SEARCH_RECENT}">{L_VIEW_SEARCH_RECENT}</a></li>
-					<!-- IF U_G_SEARCH_COMMENTED -->
-						<li><a href="{U_G_SEARCH_COMMENTED}">{L_VIEW_SEARCH_COMMENTED}</a></li>
-					<!-- ENDIF -->
-					<!-- IF U_G_SEARCH_TOPRATED -->
-						<li><a href="{U_G_SEARCH_TOPRATED}">{L_VIEW_SEARCH_TOPRATED}</a></li>
-					<!-- ENDIF -->
-					<!-- IF U_G_SEARCH_CONTESTS -->
-						<li><a href="{U_G_SEARCH_CONTESTS}">{L_VIEW_SEARCH_CONTESTS}</a></li>
-					<!-- ENDIF -->
-					<!-- IF S_USER_LOGGED_IN -->
-						<li><a href="{U_G_SEARCH_SELF}">{L_VIEW_SEARCH_SELF}</a></li>
 					<!-- ENDIF -->
 				</ul>
 			</div>
