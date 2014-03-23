@@ -1,28 +1,4 @@
 <?php
-/**
-*
-* @package phpBB Gallery
-* @version $Id$
-* @copyright (c) 2007 nickvergessen nickvergessen@gmx.de http://www.flying-bits.org
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
-*
-*/
-
-/**
-* @ignore
-*/
-
-define('IN_PHPBB', true);
-$phpEx = substr(strrchr(__FILE__, '.'), 1);
-include('common.' . $phpEx);
-include($phpbb_root_path . 'common.' . $phpEx);
-
-$phpbb_ext_gallery = new phpbb_ext_gallery_core($auth, $cache, $config, $db, $template, $user, $phpEx, $phpbb_root_path);
-$phpbb_ext_gallery->setup('posting');
-$phpbb_ext_gallery->url->_include(array('functions_display', 'functions_posting', 'functions_user'), 'phpbb');
-$phpbb_ext_gallery->url->_include(array('bbcode', 'message_parser'), 'phpbb');
-
-$user->add_lang_ext('gallery/core', 'gallery');
 
 add_form_key('gallery');
 $submit = (isset($_POST['submit'])) ? true : false;
@@ -113,7 +89,6 @@ switch ($mode)
 	break;
 
 	case 'edit':
-	case 'delete':
 		if (!$phpbb_ext_gallery->auth->acl_check('i_' . $mode, $album_id, $album_data['album_user_id']))
 		{
 			if (!$phpbb_ext_gallery->auth->acl_check('m_' . $mode, $album_id, $album_data['album_user_id']))
@@ -190,46 +165,6 @@ if ($mode == 'report')
 		'S_REPORT'			=> true,
 		'S_ALBUM_ACTION'	=> $phpbb_ext_gallery->url->append_sid('posting', "mode=report&amp;album_id=$album_id&amp;image_id=$image_id"),
 	));
-}
-else if ($mode == 'delete')
-{
-	$s_hidden_fields = build_hidden_fields(array(
-		'album_id'		=> $album_id,
-		'image_id'		=> $image_id,
-		'mode'			=> 'delete',
-	));
-
-	if (confirm_box(true))
-	{
-		phpbb_ext_gallery_core_image::handle_counter($image_id, false);
-		phpbb_ext_gallery_core_image::delete_images(array($image_id), array($image_id => $image_data['image_filename']));
-		phpbb_ext_gallery_core_album::update_info($album_id);
-
-		$message = $user->lang['DELETED_IMAGE'] . '<br />';
-		$message .= '<br />' . sprintf($user->lang['CLICK_RETURN_ALBUM'], '<a href="' . $album_backlink . '">', '</a>');
-
-		if ($user->data['user_id'] != $image_data['image_user_id'])
-		{
-			add_log('gallery', $image_data['image_album_id'], $image_id, 'LOG_GALLERY_DELETED', $image_data['image_name']);
-		}
-
-		meta_refresh(3, $album_backlink);
-		trigger_error($message);
-	}
-	else
-	{
-		if (isset($_POST['cancel']))
-		{
-			$message = $user->lang['DELETED_IMAGE_NOT'] . '<br />';
-			$message .= '<br />' . sprintf($user->lang['CLICK_RETURN_IMAGE'], '<a href="' . $image_backlink . '">', '</a>');
-			meta_refresh(3, $image_backlink);
-			trigger_error($message);
-		}
-		else
-		{
-			confirm_box(false, 'DELETE_IMAGE2', $s_hidden_fields);
-		}
-	}
 }
 else
 {

@@ -20,7 +20,7 @@ phpbbgallery_image:
     defaults: { _controller: phpbbgallery.core.controller.image:base }
 phpbbgallery_image_delete:
     pattern: /gallery/image/{image_id}/delete
-    defaults: { _controller: phpbbgallery.core.controller.image:delete }
+    defaults: { _controller: phpbbgallery.core.controller.image_delete:base }
 phpbbgallery_image_edit:
     pattern: /gallery/image/{image_id}/edit
     defaults: { _controller: phpbbgallery.core.controller.image:edit }

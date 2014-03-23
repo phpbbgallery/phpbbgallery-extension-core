@@ -135,6 +135,20 @@ services:
             - %tables.phpbbgallery.albums%
             - %tables.phpbbgallery.images%
             - %tables.phpbbgallery.users%
+    phpbbgallery.core.controller.image_delete:
+        class: phpbbgallery\core\controller\image_delete
+        arguments:
+            - @controller.helper
+            - @dbal.conn
+            - @dispatcher
+            - @log
+            - @request
+            - @template
+            - @user
+            - @phpbbgallery.core.album.display
+            - @phpbbgallery.core.album.loader
+            - @phpbbgallery.core.auth
+            - %tables.phpbbgallery.images%
     phpbbgallery.core.controller.index:
         class: phpbbgallery\core\controller\index
         arguments:
