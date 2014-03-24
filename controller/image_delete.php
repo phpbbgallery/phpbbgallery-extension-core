@@ -95,6 +95,6 @@ class image_delete extends image_action
 			}
 		}
 
-		return $this->user->lang('DELETED_IMAGE');
+		return $this->helper->render('gallery/posting_body.html', $this->user->lang('DELETE_IMAGE'));
 	}
 }

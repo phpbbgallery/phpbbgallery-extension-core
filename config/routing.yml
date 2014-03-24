@@ -21,12 +21,12 @@ phpbbgallery_image:
 phpbbgallery_image_delete:
     pattern: /gallery/image/{image_id}/delete
     defaults: { _controller: phpbbgallery.core.controller.image_delete:base }
+phpbbgallery_image_report:
+    pattern: /gallery/image/{image_id}/report
+    defaults: { _controller: phpbbgallery.core.controller.image_report:base }
 phpbbgallery_image_edit:
     pattern: /gallery/image/{image_id}/edit
     defaults: { _controller: phpbbgallery.core.controller.image:edit }
-phpbbgallery_image_report:
-    pattern: /gallery/image/{image_id}/report
-    defaults: { _controller: phpbbgallery.core.controller.image:report }
 
 phpbbgallery_image_file_source:
     pattern: /gallery/image/{image_id}/source

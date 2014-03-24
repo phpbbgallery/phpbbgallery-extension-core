@@ -102,13 +102,6 @@ switch ($mode)
 		}
 	break;
 
-	case 'report':
-		if (!$phpbb_ext_gallery->auth->acl_check('i_report', $album_id, $album_data['album_user_id']) || ($image_data['image_user_id'] == $user->data['user_id']))
-		{
-			phpbb_ext_gallery_core_misc::not_authorised($image_backlink, $image_loginlink);
-		}
-	break;
-
 	default:
 		phpbb_ext_gallery_core_misc::not_authorised($album_backlink, $album_loginlink);
 	break;

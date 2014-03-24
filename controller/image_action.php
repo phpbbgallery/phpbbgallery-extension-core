@@ -97,15 +97,13 @@ abstract class image_action
 
 		$this->display->generate_navigation($this->album_data);
 
-		$page_title = $this->action();
-
-		return $this->helper->render('gallery/viewimage_body.html', $page_title);
+		return $this->action();
 	}
 
 	/**
 	* Perform the action
 	*
-	* @return string Page title
+	* @return \Symfony\Component\HttpFoundation\Response
 	*/
 	abstract protected function action();
 
@@ -142,31 +140,40 @@ abstract class image_action
 
 		if (!$permitted)
 		{
-			if ($this->user->data['is_bot'])
-			{
-				// Redirect bots back to the image or index
-				if (!$this->gallery_auth->acl_check('i_view', $this->album_id, $this->album_data['album_user_id']))
-				{
-					redirect($this->helper->route('phpbbgallery_image', array('image_id' => $this->image_id)));
-				}
-				else
-				{
-					redirect($this->helper->route('phpbbgallery_index'));
-				}
-			}
+			return $this->access_denied();
+		}
 
-			// Display login box for guests and an error for users
-			if (!$this->user->data['is_registered'])
+		return false;
+	}
+
+	/**
+	* Checks whether the user has permissions to do the action
+	*
+	* @return \Symfony\Component\HttpFoundation\Response
+	*/
+	protected function access_denied()
+	{
+		if ($this->user->data['is_bot'])
+		{
+			// Redirect bots back to the image or index
+			if (!$this->gallery_auth->acl_check('i_view', $this->album_id, $this->album_data['album_user_id']))
 			{
-				// @todo Add "redirect after login" url
-				login_box();
+				redirect($this->helper->route('phpbbgallery_image', array('image_id' => $this->image_id)));
 			}
 			else
 			{
-				return $this->error('NOT_AUTHORISED', 403);
+				redirect($this->helper->route('phpbbgallery_index'));
 			}
 		}
-		return false;
+
+		// Display login box for guests and an error for users
+		if (!$this->user->data['is_registered'])
+		{
+			// @todo Add "redirect after login" url
+			login_box();
+		}
+
+		return $this->error('NOT_AUTHORISED', 403);
 	}
 
 	protected function error($message, $status = 200, $title = '')
