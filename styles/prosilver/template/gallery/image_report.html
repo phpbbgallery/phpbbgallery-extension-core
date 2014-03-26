@@ -1,0 +1,36 @@
+<!-- INCLUDE gallery/gallery_header.html -->
+
+<h2><a href="{U_VIEW_IMAGE}">{IMAGE_NAME}</a></h2>
+
+<div class="panel bg2">
+	<div class="inner">
+		<div style="text-align: center; padding: 20px;">
+			<img src="{U_IMAGE}" alt="{IMAGE_NAME}" />
+		</div>
+	</div>
+</div>
+
+<form id="report_image_form" action="{U_ACTION}" method="post">
+<div class="panel" id="report_image">
+	<div class="inner">
+		<h3><label for="message">{L_REPORT_IMAGE}</label></h3>
+
+		<fieldset class="fields1">
+			<!-- IF ERROR --><p class="error">{ERROR}</p><!-- ENDIF -->
+
+			<div>
+				<textarea name="message" id="message" rows="4" cols="76" tabindex="3" class="inputbox">{REPORT_TEXT}</textarea>
+			</div>
+		</fieldset>
+
+		<fieldset class="submit-buttons">
+			{S_HIDDEN_FIELDS}
+			<input type="reset" accesskey="r" tabindex="200" value="{L_RESET}" class="button2" />&nbsp;
+			<input type="submit" accesskey="s" tabindex="201" name="submit" value="{L_SUBMIT}" class="button1" />&nbsp;
+		</fieldset>
+		{S_FORM_TOKEN}
+	</div>
+</div>
+</form>
+
+<!-- INCLUDE gallery/gallery_footer.html -->

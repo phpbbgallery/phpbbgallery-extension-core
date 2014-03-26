@@ -16,31 +16,53 @@ class report
 	const OPEN = 1;
 	const LOCKED = 2;
 
+	/** @var \phpbb\db\driver\driver */
+	protected $db;
+
+	/** @var string */
+	protected $table_images;
+
+	/** @var string */
+	protected $table_reports;
+
+	public function __construct(\phpbb\db\driver\driver $db, $image_table, $report_table)
+	{
+		$this->db = $db;
+		$this->table_images = $image_table;
+		$this->table_reports = $report_table;
+	}
+
 	/**
 	* Report an image
+	*
+	* @param	int 	$album_id
+	* @param	int 	$image_id
+	* @param	int 	$reporter_id	User ID of the reporting user
+	* @param	string 	$report_message	Additional report reason
+	* @return	int		ID of the report entry
 	*/
-	static public function add($data)
+	public function add($album_id, $image_id, $report_message, $user_id)
 	{
-		global $db, $user;
-
-		if (!isset($data['report_album_id']) || !isset($data['report_image_id']) || !isset($data['report_note']))
-		{
-			return;
-		}
-		$data = $data + array(
-			'reporter_id'				=> $user->data['user_id'],
+		$data = array(
+			'report_album_id'			=> (int) $album_id,
+			'report_image_id'			=> (int) $image_id,
+			'reporter_id'				=> (int) $user_id,
+			'report_note'				=> $report_message,
 			'report_time'				=> time(),
 			'report_status'				=> self::OPEN,
 		);
-		$sql = 'INSERT INTO ' . GALLERY_REPORTS_TABLE . ' ' . $db->sql_build_array('INSERT', $data);
-		$db->sql_query($sql);
 
-		$report_id = (int) $db->sql_nextid();
+		$sql = 'INSERT INTO ' . $this->table_reports . ' ' . $this->db->sql_build_array('INSERT', $data);
+		$this->db->sql_query($sql);
 
-		$sql = 'UPDATE ' . GALLERY_IMAGES_TABLE . ' 
+		$report_id = (int) $this->db->sql_nextid();
+
+		$sql = 'UPDATE ' . $this->table_images . '
 			SET image_reported = ' . $report_id . '
 			WHERE image_id = ' . (int) $data['report_image_id'];
-		$db->sql_query($sql);
+		$this->db->sql_query($sql);
+
+		return $report_id;
 	}
 
 	/**

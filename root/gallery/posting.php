@@ -107,60 +107,6 @@ switch ($mode)
 	break;
 }
 
-if ($mode == 'report')
-{
-	if ($submit)
-	{
-		if (!check_form_key('gallery'))
-		{
-			trigger_error('FORM_INVALID');
-		}
-
-		$report_message = request_var('message', '', true);
-		$error = '';
-		if ($report_message == '')
-		{
-			$error = $user->lang['MISSING_REPORT_REASON'];
-			$submit = false;
-		}
-
-		if (!$error && $image_data['image_reported'])
-		{
-			$error = $user->lang['IMAGE_ALREADY_REPORTED'];
-		}
-
-		if (!$error)
-		{
-			$data = array(
-				'report_album_id'			=> $album_id,
-				'report_image_id'			=> $image_id,
-				'report_note'				=> $report_message,
-			);
-			phpbb_gallery_report::add($data);
-
-			$message = $user->lang['IMAGES_REPORTED_SUCCESSFULLY'];
-			$message .= '<br /><br />' . sprintf($user->lang['CLICK_RETURN_IMAGE'], '<a href="' . $image_backlink . '">', '</a>');
-			$message .= '<br /><br />' . sprintf($user->lang['CLICK_RETURN_ALBUM'], '<a href="' . $album_backlink . '">', '</a>');
-
-			meta_refresh(3, $image_backlink);
-			trigger_error($message);
-		}
-
-	}
-
-	$template->assign_vars(array(
-		'ERROR'				=> $error,
-		'U_IMAGE'			=> ($image_id) ? $phpbb_ext_gallery->url->append_sid('image', "album_id=$album_id&amp;image_id=$image_id") : '',
-		'U_VIEW_IMAGE'		=> ($image_id) ? $phpbb_ext_gallery->url->append_sid('image_page', "album_id=$album_id&amp;image_id=$image_id") : '',
-		'IMAGE_RSZ_WIDTH'	=> $phpbb_ext_gallery->config->get('medium_width'),
-		'IMAGE_RSZ_HEIGHT'	=> $phpbb_ext_gallery->config->get('medium_height'),
-
-		'S_REPORT'			=> true,
-		'S_ALBUM_ACTION'	=> $phpbb_ext_gallery->url->append_sid('posting', "mode=report&amp;album_id=$album_id&amp;image_id=$image_id"),
-	));
-}
-else
-{
 	if ($mode == 'upload')
 	{
 		// Upload Quota Check
@@ -308,6 +254,7 @@ else
 		}
 	}
 
+// edit && upload_edit
 	if ($mode != 'upload')
 	{
 		// Load BBCodes and smilies data
@@ -636,7 +583,6 @@ else
 			'S_MOVE_MODERATOR'	=> ($user->data['user_id'] != $image_data['image_user_id']) ? true : false,
 		));
 	}
-}
 
 $mode = (strpos($mode, '_')) ? substr($mode, 0, strpos($mode, '_')) : $mode;
 page_header($user->lang[strtoupper($mode) . '_IMAGE'], false);
