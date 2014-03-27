@@ -5,7 +5,7 @@
 	"homepage": "https://github.com/nickvergessen/phpbb-gallery",
 	"version": "1.2.0",
 	"time": "2014-03-15",
-	"licence": "GPL-2.0",
+	"license": "GPL-2.0",
 	"authors": [
 		{
 			"name": "Joas Schilling",
