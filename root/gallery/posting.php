@@ -8,30 +8,6 @@ $image_id = request_var('image_id', 0);
 $error = $message = '';
 $slower_redirect = false;
 
-if (!$album_id && ($mode == 'upload'))
-{
-	// Public albums
-	$s_album_select = phpbb_ext_gallery_core_album::get_albumbox(true, '', 0, 'i_upload', false, phpbb_ext_gallery_core_album::PUBLIC_ALBUM, phpbb_ext_gallery_core_album::TYPE_UPLOAD);
-	if ($user->data['user_id'] != ANONYMOUS)
-	{
-		// Personal albums
-		$s_album_select .= phpbb_ext_gallery_core_album::get_albumbox(false, '', -1, 'i_upload', false, $user->data['user_id'], phpbb_ext_gallery_core_album::TYPE_UPLOAD);
-	}
-	$template->assign_vars(array(
-	//function get_albumbox($ignore_personals, $select_name, $select_id = false, $requested_permission = false, $ignore_id = false, $album_user_id = self::PUBLIC_ALBUM, $requested_album_type = -1)
-		'S_ALBUM_SELECT'	=> $s_album_select,
-	));
-
-	page_header($user->lang['UPLOAD_IMAGE'], false);
-
-	$template->set_filenames(array(
-		'body' => 'gallery/posting_body.html',
-	));
-
-	page_footer();
-	return;
-}
-
 // Check for permissions cheaters!
 if ($image_id)
 {
@@ -56,13 +32,6 @@ $album_loginlink = $phpbb_ext_gallery->url->append_sid('relative', 'album', "alb
 if ($user->data['is_bot'])
 {
 	redirect(($image_id) ? $image_backlink : $album_backlink);
-}
-if ($album_data['album_type'] == phpbb_ext_gallery_core_album::TYPE_CAT)
-{
-	// If we get here, the database is corrupted,
-	// but at least we dont let them do anything.
-	meta_refresh(3, $album_backlink);
-	trigger_error('ALBUM_IS_CATEGORY');
 }
 
 if ($image_id && (!$phpbb_ext_gallery->auth->acl_check('m_status', $album_id, $album_data['album_user_id']) && ($image_data['image_status'] != phpbb_ext_gallery_core_image::STATUS_APPROVED)))
@@ -109,40 +78,6 @@ switch ($mode)
 
 	if ($mode == 'upload')
 	{
-		// Upload Quota Check
-		// 1. Check album-configuration Quota
-		if (($phpbb_ext_gallery->config->get('album_images') >= 0) && ($album_data['album_images'] >= $phpbb_ext_gallery->config->get('album_images')))
-		{
-			//@todo: Add return link
-			trigger_error('ALBUM_REACHED_QUOTA');
-		}
-
-		// 2. Check user-limit, if he is not allowed to go unlimited
-		if (!$phpbb_ext_gallery->auth->acl_check('i_unlimited', $album_id, $album_data['album_user_id']))
-		{
-			$sql = 'SELECT COUNT(image_id) count
-				FROM ' . GALLERY_IMAGES_TABLE . '
-				WHERE image_user_id = ' . $user->data['user_id'] . '
-					AND image_status <> ' . phpbb_ext_gallery_core_image::STATUS_ORPHAN . '
-					AND image_album_id = ' . $album_id;
-			$result = $db->sql_query($sql);
-			$own_images = (int) $db->sql_fetchfield('count');
-			$db->sql_freeresult($result);
-			if ($own_images >= $phpbb_ext_gallery->auth->acl_check('i_count', $album_id, $album_data['album_user_id']))
-			{
-				//@todo: Add return link
-				trigger_error($user->lang('USER_REACHED_QUOTA', $phpbb_ext_gallery->auth->acl_check('i_count', $album_id, $album_data['album_user_id'])));
-			}
-		}
-
-		if (phpbb_ext_gallery_core_misc::display_captcha('upload'))
-		{
-			$phpbb_ext_gallery->url->_include('captcha/captcha_factory', 'phpbb');
-			$captcha =& phpbb_captcha_factory::get_instance($config['captcha_plugin']);
-			$captcha->init(CONFIRM_POST);
-			$s_captcha_hidden_fields = '';
-		}
-
 		$upload_files_limit = ($phpbb_ext_gallery->auth->acl_check('i_unlimited', $album_id, $album_data['album_user_id'])) ? $phpbb_ext_gallery->config->get('num_uploads') : min(($phpbb_ext_gallery->auth->acl_check('i_count', $album_id, $album_data['album_user_id']) - $own_images), $phpbb_ext_gallery->config->get('num_uploads'));
 
 		if ($submit)
@@ -237,20 +172,6 @@ switch ($mode)
 				'S_ALLOW_COMMENTS'		=> true,
 				'L_ALLOW_COMMENTS'		=> $user->lang('ALLOW_COMMENTS_ARY', $upload_files_limit),
 			));
-
-			if (phpbb_ext_gallery_core_misc::display_captcha('upload'))
-			{
-				if (!$submit || !$captcha->is_solved())
-				{
-					$template->assign_vars(array(
-						'S_CONFIRM_CODE'			=> true,
-						'CAPTCHA_TEMPLATE'			=> $captcha->get_template(),
-					));
-				}
-				$template->assign_vars(array(
-					'S_CAPTCHA_HIDDEN_FIELDS'	=> $s_captcha_hidden_fields,
-				));
-			}
 		}
 	}
 

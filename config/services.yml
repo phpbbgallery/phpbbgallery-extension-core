@@ -185,3 +185,18 @@ services:
             - @phpbbgallery.core.album.display
             - %core.root_path%
             - %core.php_ext%
+    phpbbgallery.core.controller.upload:
+        class: phpbbgallery\core\controller\upload
+        arguments:
+            - @config
+            - @controller.helper
+            - @dbal.conn
+            - @dispatcher
+            - @log
+            - @request
+            - @template
+            - @user
+            - @phpbbgallery.core.album.display
+            - @phpbbgallery.core.album.loader
+            - @phpbbgallery.core.auth
+            - %tables.phpbbgallery.images%

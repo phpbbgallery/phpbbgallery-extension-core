@@ -285,7 +285,7 @@ class album
 
 	/**
 	 * @param	int		$album_id
-	 * @param	array	$album_data
+	 * @param	int		$owner_id
 	 */
 	protected function check_permissions($album_id, $owner_id)
 	{

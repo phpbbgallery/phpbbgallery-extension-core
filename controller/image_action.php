@@ -56,7 +56,7 @@ abstract class image_action
 
 	/**
 	* Image Controller
-	*	Route: gallery/image_id/{image_id}/{action}
+	*	Route: gallery/image/{image_id}/{action}
 	*
 	* @param int	$image_id	Image ID
 	* @return Symfony\Component\HttpFoundation\Response A Symfony Response object

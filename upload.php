@@ -1,23 +1,16 @@
 <?php
+
 /**
 *
 * @package phpBB Gallery
-* @version $Id$
-* @copyright (c) 2011 nickvergessen nickvergessen@gmx.de http://www.flying-bits.org
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+* @copyright (c) 2014 nickvergessen
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
 
-/**
-* @ignore
-*/
+namespace phpbbgallery\core;
 
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
-
-class phpbb_ext_gallery_core_upload
+class upload
 {
 	/**
 	* Number of Files per Directory
@@ -613,26 +606,26 @@ class phpbb_ext_gallery_core_upload
 	*/
 	static public function get_allowed_types($get_types = false, $ignore_zip = false)
 	{
-		global $user, $phpbb_ext_gallery;
+		global $user, $config;
 
 		$extensions = $types = array();
-		if ($phpbb_ext_gallery->config->get('allow_jpg'))
+		if ($config['phpbb_gallery_allow_jpg'])
 		{
 			$types[] = $user->lang['FILETYPES_JPG'];
 			$extensions[] = 'jpg';
 			$extensions[] = 'jpeg';
 		}
-		if ($phpbb_ext_gallery->config->get('allow_gif'))
+		if ($config['phpbb_gallery_allow_gif'])
 		{
 			$types[] = $user->lang['FILETYPES_GIF'];
 			$extensions[] = 'gif';
 		}
-		if ($phpbb_ext_gallery->config->get('allow_png'))
+		if ($config['phpbb_gallery_allow_png'])
 		{
 			$types[] = $user->lang['FILETYPES_PNG'];
 			$extensions[] = 'png';
 		}
-		if (!$ignore_zip && $phpbb_ext_gallery->config->get('allow_zip'))
+		if (!$ignore_zip && $config['phpbb_gallery_allow_zip'])
 		{
 			$types[] = $user->lang['FILETYPES_ZIP'];
 			$extensions[] = 'zip';
