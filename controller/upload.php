@@ -130,11 +130,16 @@ class upload
 		{
 			return $error_page;
 		}
-		$this->check_user_quote($this->album_id, $owner_id);
 
 		$error_msgs = '';
 		$submit = $this->request->is_set_post('submit');
 		$upload_files_limit = ($user_images === false) ? $this->config['phpbb_gallery_num_uploads'] : min(($this->gallery_auth->acl_check('i_count', $this->album_id, $owner_id) - $user_images), $this->config['phpbb_gallery_num_uploads']);
+
+
+		if ($submit)
+		{
+			$this->process_upload();
+		}
 
 		if (!$submit || (isset($process) && !$process->uploaded_files))
 		{
@@ -164,6 +169,62 @@ class upload
 		}
 
 		return $this->helper->render('gallery/posting_body.html', $this->user->lang('UPLOAD_IMAGE'));
+	}
+
+	/**
+	*
+	*/
+	protected function process_upload()
+	{
+		if (!check_form_key('gallery'))
+		{
+			trigger_error('FORM_INVALID');
+		}
+
+		$process = new \phpbbgallery\core\upload($album_id, $upload_files_limit);
+		$process->set_rotating($this->request->variable('rotate', array(0)));
+		$process->set_allow_comments($this->request->variable('allow_comments', false));
+
+		if (!$this->user->data['is_registered'])
+		{
+			$username = $this->request->variable('username', $this->user->data['username']);
+			if ($result = validate_username($username))
+			{
+				$this->user->add_lang('ucp');
+				$error_array[] = $this->user->lang[$result . '_USERNAME'];
+			}
+			else
+			{
+				$process->set_username($username);
+			}
+		}
+
+		if (empty($process->errors))
+		{
+
+			for ($file_count = 0; $file_count < $upload_files_limit; $file_count++)
+			{
+				/**
+				 * Upload an image from the FILES-array,
+				 * call some functions (rotate, resize, ...)
+				 * and store the image to the database
+				 */
+				$process->upload_file($file_count);
+			}
+		}
+
+		if (!$process->uploaded_files)
+		{
+			$process->new_error($this->user->lang['UPLOAD_NO_FILE']);
+		}
+		else
+		{
+			$mode = 'upload_edit';
+			// Remove submit, so we get the first screen of step 2.
+			$submit = false;
+		}
+
+		$error = implode('<br />', $process->errors);
 	}
 
 	/**
