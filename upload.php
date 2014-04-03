@@ -23,9 +23,14 @@ class upload
 	/**
 	* Objects: phpBB Upload, 2 Files and Image-Functions
 	*/
-	protected  $upload;
+	protected $upload;
+
+	/** @var \filespec */
 	protected $file;
+
+	/** @var \filespec */
 	protected $zip_file;
+
 	protected $tools;
 	protected $table_images;
 
@@ -41,6 +46,7 @@ class upload
 	protected $album_id = 0;
 	protected $file_count = 0;
 	protected $image_num = 0;
+	protected $file_limit = 0;
 	protected $allow_comments = false;
 	protected $sent_quota_error = false;
 	protected $username = '';
@@ -51,7 +57,7 @@ class upload
 	/**
 	* Constructor
 	*/
-	public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\user $user, \phpbbgallery\core\file\file $tools, $images_table, $phpbb_root_path, $phpEx)
+	public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\user $user, \phpbbgallery\core\file\file $tools, $images_table, $import_noroot_dir, $import_dir, $source_noroot_dir, $source_dir, $medium_dir, $mini_dir, $phpbb_root_path, $phpEx)
 	{
 		$this->config = $config;
 		$this->db = $db;
@@ -59,20 +65,34 @@ class upload
 		$this->user = $user;
 		$this->tools = $tools;
 		$this->table_images = $images_table;
+		$this->dir_import_noroot = $import_noroot_dir;
+		$this->dir_import = $import_dir;
+		$this->dir_source_noroot = $source_noroot_dir;
+		$this->dir_source = $source_dir;
+		$this->dir_medium = $medium_dir;
+		$this->dir_mini = $mini_dir;
 		$this->root_path = $phpbb_root_path;
 		$this->php_ext = $phpEx;
 
-		//public function __construct($album_id, $num_files = 0)
 		if (!class_exists('\fileupload'))
 		{
 			include($this->root_path . 'includes/functions_upload.' . $this->php_ext);
 		}
 		$this->upload = new \fileupload();
-		$this->upload->fileupload('', self::get_allowed_types(), (4 * $this->config['phpbb_gallery_max_filesize']));
+		$this->upload->fileupload('', $this->get_allowed_types(), (4 * $this->config['phpbb_gallery_max_filesize']));
+	}
 
-//		$this->album_id = (int) $album_id;
-//		$this->file_limit = (int) $num_files;
-//		$this->username = $user->data['username'];
+	/**
+	 * @param	int		$album_id
+	 * @param	int		$num_files
+	 * @param	bool	$username
+	 * @return		null
+	 */
+	public function bind($album_id, $num_files, $username = false)
+	{
+		$this->album_id = (int) $album_id;
+		$this->file_limit = (int) $num_files;
+		$this->username = $username ?: $this->user->data['username'];
 	}
 
 	/**
@@ -119,10 +139,10 @@ class upload
 			include($this->root_path . 'includes/functions_compress.' . $this->php_ext);
 		}
 
-		$tmp_dir = $phpbb_ext_gallery->url->path('import') . 'tmp_' . md5(unique_id()) . '/';
+		$tmp_dir = $this->dir_import . 'tmp_' . md5(unique_id()) . '/';
 
 		$this->zip_file->clean_filename('unique_ext'/*, $user->data['user_id'] . '_'*/);
-		$this->zip_file->move_file(substr($phpbb_ext_gallery->url->path('import_noroot'), 0, -1), false, false, CHMOD_ALL);
+		$this->zip_file->move_file(substr($this->dir_import_noroot, 0, -1), false, false, CHMOD_ALL);
 		if (!empty($this->zip_file->error))
 		{
 			$this->zip_file->remove();
@@ -158,7 +178,7 @@ class upload
 			{
 				$this->read_zip_folder($current_dir . $file . '/');
 			}
-			else if (in_array(utf8_substr(strtolower($file), utf8_strrpos($file, '.') + 1), self::get_allowed_types(false, true)))
+			else if (in_array(utf8_substr(strtolower($file), utf8_strrpos($file, '.') + 1), $this->get_allowed_types(false, true)))
 			{
 				if (!$this->file_limit || ($this->uploaded_files < $this->file_limit))
 				{
@@ -219,8 +239,8 @@ class upload
 		}
 
 		$sql_ary = array(
-			'image_status'				=> ($needs_approval) ? phpbb_ext_gallery_core_image::STATUS_UNAPPROVED : phpbb_ext_gallery_core_image::STATUS_APPROVED,
-			'image_contest'				=> ($is_in_contest) ? phpbb_ext_gallery_core_image::IN_CONTEST : phpbb_ext_gallery_core_image::NO_CONTEST,
+			'image_status'				=> ($needs_approval) ? \phpbbgallery\core\image\utility::STATUS_UNAPPROVED : \phpbbgallery\core\image\utility::STATUS_APPROVED,
+			'image_contest'				=> ($is_in_contest) ? \phpbbgallery\core\image\utility::IN_CONTEST : \phpbbgallery\core\image\utility::NO_CONTEST,
 			'image_desc'				=> $message_parser->message,
 			'image_desc_uid'			=> $message_parser->bbcode_uid,
 			'image_desc_bitfield'		=> $message_parser->bbcode_bitfield,
@@ -237,7 +257,7 @@ class upload
 
 		$additional_sql_data = array();
 		$image_data = $this->image_data[$image_id];
-		$file_link = $phpbb_ext_gallery->url->path('upload') . $this->image_data[$image_id]['image_filename'];
+		$file_link = $this->dir_source . $this->image_data[$image_id]['image_filename'];
 
 		$vars = array('additional_sql_data', 'image_data', 'file_link');
 		extract($this->dispatcher->trigger_event('gallery.core.upload.update_image_before', compact($vars)));
@@ -266,20 +286,20 @@ class upload
 	*/
 	public function prepare_file()
 	{
-		$upload_dir = self::get_current_upload_dir();
+		$upload_dir = $this->get_current_upload_dir();
 
 		// Rename the file, move it to the correct location and set chmod
 		if (!$upload_dir)
 		{
 			$this->file->clean_filename('unique_ext');
-			$this->file->move_file(substr($phpbb_ext_gallery->url->path('upload_noroot'), 0, -1), false, false, CHMOD_ALL);
+			$this->file->move_file(substr($this->dir_source_noroot, 0, -1), false, false, CHMOD_ALL);
 		}
 		else
 		{
 			// Okay, this looks hacky, but what we do here is, we store the directory name in the filename.
 			// However phpBB strips directories form the filename, when moving, so we need to specify that again.
 			$this->file->clean_filename('unique_ext', $upload_dir . '/');
-			$this->file->move_file($phpbb_ext_gallery->url->path('upload_noroot') . $upload_dir, false, false, CHMOD_ALL);
+			$this->file->move_file($this->dir_source_noroot . $upload_dir, false, false, CHMOD_ALL);
 		}
 
 		if (!empty($this->file->error))
@@ -296,13 +316,13 @@ class upload
 		$vars = array('additional_sql_data', 'file');
 		extract($this->dispatcher->trigger_event('gallery.core.upload.prepare_file_before', compact($vars)));
 
-		$this->tools->set_image_options($phpbb_ext_gallery->config->get('max_filesize'), $phpbb_ext_gallery->config->get('max_height'), $phpbb_ext_gallery->config->get('max_width'));
+		$this->tools->set_image_options($this->config['phpbb_gallery_max_filesize'], $this->config['phpbb_gallery_max_height'], $this->config['phpbb_gallery_max_width']);
 		$this->tools->set_image_data($this->file->destination_file, '', $this->file->filesize, true);
 
 		// Rotate the image
-		if ($phpbb_ext_gallery->config->get('allow_rotate') && $this->get_rotating())
+		if ($this->config['phpbb_gallery_allow_rotate'] && $this->get_rotating())
 		{
-			$this->tools->rotate_image($this->get_rotating(), $phpbb_ext_gallery->config->get('allow_resize'));
+			$this->tools->rotate_image($this->get_rotating(), $this->config['phpbb_gallery_allow_resize']);
 			if ($this->tools->rotated)
 			{
 				$this->file->height = $this->tools->image_size['height'];
@@ -311,11 +331,11 @@ class upload
 		}
 
 		// Resize oversized images
-		if (($this->file->width > $phpbb_ext_gallery->config->get('max_width')) || ($this->file->height > $phpbb_ext_gallery->config->get('max_height')))
+		if (($this->file->width > $this->config['phpbb_gallery_max_width']) || ($this->file->height > $this->config['phpbb_gallery_max_height']))
 		{
-			if ($phpbb_ext_gallery->config->get('allow_resize'))
+			if ($this->config['phpbb_gallery_allow_resize'])
 			{
-				$this->tools->resize_image($phpbb_ext_gallery->config->get('max_width'), $phpbb_ext_gallery->config->get('max_height'));
+				$this->tools->resize_image($this->config['phpbb_gallery_max_width'], $this->config['phpbb_gallery_max_height']);
 				if ($this->tools->resized)
 				{
 					$this->file->height = $this->tools->image_size['height'];
@@ -330,7 +350,7 @@ class upload
 			}
 		}
 
-		if ($this->file->filesize > (1.2 * $phpbb_ext_gallery->config->get('max_filesize')))
+		if ($this->file->filesize > (1.2 * $this->config['phpbb_gallery_max_filesize']))
 		{
 			$this->file->remove();
 			$this->new_error($this->user->lang('UPLOAD_ERROR', $this->file->uploadname, $this->user->lang['BAD_UPLOAD_FILE_SIZE']));
@@ -339,7 +359,7 @@ class upload
 
 		if ($this->tools->rotated || $this->tools->resized)
 		{
-			$this->tools->write_image($this->file->destination_file, $phpbb_ext_gallery->config->get('jpg_quality'), true);
+			$this->tools->write_image($this->file->destination_file, $this->config['phpbb_gallery_jpg_quality'], true);
 		}
 
 		// Everything okay, now add the file to the database and return the image_id
@@ -353,18 +373,18 @@ class upload
 	public function prepare_file_update($image_id)
 	{
 		$this->tools->set_image_options($this->config['phpbb_gallery_max_filesize'], $this->config['phpbb_gallery_max_height'], $$this->config['phpbb_gallery_max_width']);
-		$this->tools->set_image_data($phpbb_ext_gallery->url->path('upload') . $this->image_data[$image_id]['image_filename'], '', 0, true);
+		$this->tools->set_image_data($this->dir_source . $this->image_data[$image_id]['image_filename'], '', 0, true);
 
 
 		// Rotate the image
-		if ($phpbb_ext_gallery->config->get('allow_rotate') && $this->get_rotating())
+		if ($this->config['phpbb_gallery_allow_rotate'] && $this->get_rotating())
 		{
 			$this->tools->rotate_image($this->get_rotating(), $this->config['phpbb_gallery_allow_resize']);
 			if ($this->tools->rotated)
 			{
 				$this->tools->write_image($this->tools->image_source, $this->config['phpbb_gallery_jpg_quality'], true);
-				@unlink($phpbb_ext_gallery->url->path('thumbnail') . $this->image_data[$image_id]['image_filename']);
-				@unlink($phpbb_ext_gallery->url->path('medium') . $this->image_data[$image_id]['image_filename']);
+				@unlink($this->dir_mini . $this->image_data[$image_id]['image_filename']);
+				@unlink($this->dir_medium . $this->image_data[$image_id]['image_filename']);
 			}
 
 		}
@@ -393,8 +413,8 @@ class upload
 			'image_user_ip'			=> $this->user->ip,
 
 			'image_album_id'		=> $this->album_id,
-			'image_status'			=> phpbb_ext_gallery_core_image::STATUS_ORPHAN,
-			'image_contest'			=> phpbb_ext_gallery_core_image::NO_CONTEST,
+			'image_status'			=> \phpbbgallery\core\image\utility::STATUS_ORPHAN,
+			'image_contest'			=> \phpbbgallery\core\image\utility::NO_CONTEST,
 			'image_allow_comments'	=> $this->allow_comments,
 			'image_desc'			=> '',
 			'image_desc_uid'		=> '',
@@ -419,7 +439,7 @@ class upload
 
 		$sql = 'SELECT image_id, image_filename
 			FROM ' . $this->table_images . '
-			WHERE image_status = ' . phpbb_ext_gallery_core_image::STATUS_ORPHAN . '
+			WHERE image_status = ' . \phpbbgallery\core\image\utility::STATUS_ORPHAN . '
 				AND image_time < ' . $prunetime;
 		$result = $this->db->sql_query($sql);
 		$images = $filenames = array();
@@ -432,7 +452,8 @@ class upload
 
 		if ($images)
 		{
-			phpbb_ext_gallery_core_image::delete_images($images, $filenames, false);
+			// @todo Enable pruning
+//			\phpbbgallery\core\image\utility::delete_images($images, $filenames, false);
 		}
 	}
 
@@ -448,15 +469,9 @@ class upload
 		{
 			$this->config->set('phpbb_gallery_current_upload_dir_size', 0, true);
 			$this->config->increment('phpbb_gallery_current_upload_dir', 1);
-			mkdir($phpbb_ext_gallery->url->path('upload') . $this->config['phpbb_gallery_current_upload_dir']);
-			mkdir($phpbb_ext_gallery->url->path('medium') . $this->config['phpbb_gallery_current_upload_dir']);
-			mkdir($phpbb_ext_gallery->url->path('thumbnail') . $this->config['phpbb_gallery_current_upload_dir']);
-			copy($phpbb_ext_gallery->url->path('upload') . 'index.htm', $phpbb_ext_gallery->url->path('upload') . $this->config['phpbb_gallery_current_upload_dir'] . '/index.htm');
-			copy($phpbb_ext_gallery->url->path('upload') . 'index.htm', $phpbb_ext_gallery->url->path('medium') . $this->config['phpbb_gallery_current_upload_dir'] . '/index.htm');
-			copy($phpbb_ext_gallery->url->path('upload') . 'index.htm', $phpbb_ext_gallery->url->path('thumbnail') . $this->config['phpbb_gallery_current_upload_dir'] . '/index.htm');
-			copy($phpbb_ext_gallery->url->path('upload') . '.htaccess', $phpbb_ext_gallery->url->path('upload') . $this->config['phpbb_gallery_current_upload_dir'] . '/.htaccess');
-			copy($phpbb_ext_gallery->url->path('upload') . '.htaccess', $phpbb_ext_gallery->url->path('medium') . $this->config['phpbb_gallery_current_upload_dir'] . '/.htaccess');
-			copy($phpbb_ext_gallery->url->path('upload') . '.htaccess', $phpbb_ext_gallery->url->path('thumbnail') . $this->config['phpbb_gallery_current_upload_dir'] . '/.htaccess');
+			mkdir($this->dir_source . $this->config['phpbb_gallery_current_upload_dir']);
+			mkdir($this->dir_medium . $this->config['phpbb_gallery_current_upload_dir']);
+			mkdir($this->dir_mini . $this->config['phpbb_gallery_current_upload_dir']);
 		}
 		return $this->config['phpbb_gallery_current_upload_dir'];
 	}
@@ -568,7 +583,7 @@ class upload
 
 		$sql = 'SELECT *
 			FROM ' . $this->table_images . '
-			WHERE image_status = ' . phpbb_ext_gallery_core_image::STATUS_ORPHAN . '
+			WHERE image_status = ' . \phpbbgallery\core\image\utility::STATUS_ORPHAN . '
 				AND ' . $this->db->sql_in_set('image_id', $image_ids);
 		$result = $this->db->sql_query($sql);
 
@@ -592,23 +607,23 @@ class upload
 		$extensions = $types = array();
 		if ($this->config['phpbb_gallery_allow_jpg'])
 		{
-			$types[] = $this->user->lang['FILETYPES_JPG'];
+			$types[] = $this->user->lang('FILETYPES_JPG');
 			$extensions[] = 'jpg';
 			$extensions[] = 'jpeg';
 		}
 		if ($this->config['phpbb_gallery_allow_gif'])
 		{
-			$types[] = $this->user->lang['FILETYPES_GIF'];
+			$types[] = $this->user->lang('FILETYPES_GIF');
 			$extensions[] = 'gif';
 		}
 		if ($this->config['phpbb_gallery_allow_png'])
 		{
-			$types[] = $this->user->lang['FILETYPES_PNG'];
+			$types[] = $this->user->lang('FILETYPES_PNG');
 			$extensions[] = 'png';
 		}
 		if (!$ignore_zip && $this->config['phpbb_gallery_allow_zip'])
 		{
-			$types[] = $this->user->lang['FILETYPES_ZIP'];
+			$types[] = $this->user->lang('FILETYPES_ZIP');
 			$extensions[] = 'zip';
 		}
 

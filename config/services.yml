@@ -1,7 +1,10 @@
 parameters:
-    phpbbgallery.core.file.source: %core.root_path%files/phpbbgallery/core/source/
-    phpbbgallery.core.file.medium: %core.root_path%files/phpbbgallery/core/medium/
-    phpbbgallery.core.file.mini: %core.root_path%files/phpbbgallery/core/mini/
+    phpbbgallery.core.filedir.import: %core.root_path%files/phpbbgallery/core/import/
+    phpbbgallery.core.filedir.import.noroot: files/phpbbgallery/core/import/
+    phpbbgallery.core.filedir.source: %core.root_path%files/phpbbgallery/core/source/
+    phpbbgallery.core.filedir.source.noroot: files/phpbbgallery/core/source/
+    phpbbgallery.core.filedir.medium: %core.root_path%files/phpbbgallery/core/medium/
+    phpbbgallery.core.filedir.mini: %core.root_path%files/phpbbgallery/core/mini/
     phpbbgallery.core.file.watermark: %core.root_path%files/phpbbgallery/core/watermark.png
 
     tables.phpbbgallery.albums: %core.table_prefix%gallery_albums
@@ -96,6 +99,12 @@ services:
             - @user
             - @phpbbgallery.core.file.tools
             - %tables.phpbbgallery.images%
+            - %phpbbgallery.core.filedir.import.noroot%
+            - %phpbbgallery.core.filedir.import%
+            - %phpbbgallery.core.filedir.source.noroot%
+            - %phpbbgallery.core.filedir.source%
+            - %phpbbgallery.core.filedir.medium%
+            - %phpbbgallery.core.filedir.mini%
             - %core.root_path%
             - %core.php_ext%
     phpbbgallery.core.user:
@@ -129,9 +138,9 @@ services:
             - @phpbbgallery.core.auth
             - @phpbbgallery.core.user
             - @phpbbgallery.core.file.tools
-            - %phpbbgallery.core.file.source%
-            - %phpbbgallery.core.file.medium%
-            - %phpbbgallery.core.file.mini%
+            - %phpbbgallery.core.filedir.source%
+            - %phpbbgallery.core.filedir.medium%
+            - %phpbbgallery.core.filedir.mini%
             - %phpbbgallery.core.file.watermark%
             - %tables.phpbbgallery.albums%
             - %tables.phpbbgallery.images%

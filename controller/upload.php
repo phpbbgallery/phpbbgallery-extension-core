@@ -12,41 +12,47 @@ namespace phpbbgallery\core\controller;
 
 class upload
 {
-	/* @var \phpbb\controller\helper */
+	/** @var \phpbb\controller\helper */
 	protected $helper;
 
-	/* @var \phpbb\db\driver\driver */
+	/** @var \phpbb\db\driver\driver */
 	protected $db;
 
-	/* @var \phpbb\request\request */
+	/** @var \phpbb\request\request */
 	protected $request;
 
-	/* @var \phpbb\template\template */
+	/** @var \phpbb\template\template */
 	protected $template;
 
-	/* @var \phpbb\user */
+	/** @var \phpbb\user */
 	protected $user;
 
-	/* @var \phpbbgallery\core\album\display */
+	/** @var \phpbbgallery\core\album\display */
 	protected $display;
 
-	/* @var \phpbbgallery\core\album\loader */
+	/** @var \phpbbgallery\core\album\loader */
 	protected $loader;
 
-	/* @var \phpbbgallery\core\auth\auth */
+	/** @var \phpbbgallery\core\auth\auth */
 	protected $gallery_auth;
 
-	/* @var \phpbbgallery\core\upload */
+	/** @var \phpbbgallery\core\upload */
 	protected $upload;
 
-	/* @var string */
+	/** @var string */
 	protected $table_images;
 
-	/* @var int */
+	/** @var int */
 	protected $album_id;
 
-	/* @var array */
+	/** @var array */
 	protected $album_data;
+
+	/** @var bool */
+	protected $submit;
+
+	/** @var string */
+	protected $mode;
 
 	/**
 	 * Constructor
@@ -91,6 +97,7 @@ class upload
 	public function base($album_id, $mode)
 	{
 		$this->album_id = (int) $album_id;
+		$this->mode = $mode;
 		$this->user->add_lang_ext('phpbbgallery/core', array('gallery'));
 
 		try
@@ -137,16 +144,16 @@ class upload
 
 		add_form_key('gallery');
 		$error_msgs = '';
-		$submit = $this->request->is_set_post('submit');
+		$this->submit = $this->request->is_set_post('submit');
 		$upload_files_limit = ($user_images === false) ? $this->config['phpbb_gallery_num_uploads'] : min(($this->gallery_auth->acl_check('i_count', $this->album_id, $owner_id) - $user_images), $this->config['phpbb_gallery_num_uploads']);
 
 
-		if ($submit)
+		if ($this->submit)
 		{
-			$this->process_upload();
+			$error_msgs = $this->process_upload($upload_files_limit);
 		}
 
-		if (!$submit || !$this->upload->uploaded_files)
+		if (!$this->submit || !$this->upload->uploaded_files)
 		{
 			for ($i = 0; $i < $upload_files_limit; $i++)
 			{
@@ -154,7 +161,7 @@ class upload
 			}
 		}
 
-		if ($mode == 'upload')
+		if ($this->mode == 'upload')
 		{
 			$this->template->assign_vars(array(
 				'ERROR'					=> $error_msgs,
@@ -179,14 +186,14 @@ class upload
 	/**
 	*
 	*/
-	protected function process_upload()
+	protected function process_upload($max_num_files)
 	{
 		if (!check_form_key('gallery'))
 		{
 			trigger_error('FORM_INVALID');
 		}
 
-		//$this->upload->($album_id, $upload_files_limit);
+		$this->upload->bind($this->album_id, $max_num_files);
 		$this->upload->set_rotating($this->request->variable('rotate', array(0)));
 		$this->upload->set_allow_comments($this->request->variable('allow_comments', false));
 
@@ -207,7 +214,7 @@ class upload
 		if (empty($this->upload->errors))
 		{
 
-			for ($file_count = 0; $file_count < $upload_files_limit; $file_count++)
+			for ($file_count = 0; $file_count < $max_num_files; $file_count++)
 			{
 				/**
 				 * Upload an image from the FILES-array,
@@ -224,12 +231,12 @@ class upload
 		}
 		else
 		{
-			$mode = 'upload_edit';
+			$this->mode = 'upload_edit';
 			// Remove submit, so we get the first screen of step 2.
-			$submit = false;
+			$this->submit = false;
 		}
 
-		$error = implode('<br />', $this->upload->errors);
+		return implode('<br />', $this->upload->errors);
 	}
 
 	/**
