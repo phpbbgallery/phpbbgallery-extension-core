@@ -23,10 +23,11 @@ class upload
 	/**
 	* Objects: phpBB Upload, 2 Files and Image-Functions
 	*/
-	protected  $upload = null;
-	protected $file = null;
-	protected $zip_file = null;
-	protected $tools = null;
+	protected  $upload;
+	protected $file;
+	protected $zip_file;
+	protected $tools;
+	protected $table_images;
 
 	/**
 	* Basic variables...
@@ -50,24 +51,24 @@ class upload
 	/**
 	* Constructor
 	*/
-	public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver $db, \phpbb\user $user, \phpbbgallery\core\file\file $tools, $phpbb_root_path, $phpEx)
+	public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\user $user, \phpbbgallery\core\file\file $tools, $images_table, $phpbb_root_path, $phpEx)
 	{
 		$this->config = $config;
 		$this->db = $db;
+		$this->dispatcher = $dispatcher;
 		$this->user = $user;
 		$this->tools = $tools;
+		$this->table_images = $images_table;
 		$this->root_path = $phpbb_root_path;
 		$this->php_ext = $phpEx;
 
 		//public function __construct($album_id, $num_files = 0)
 		if (!class_exists('\fileupload'))
 		{
-			include($this->root_path . 'includes/functions_upload' . $this->php_ext);
+			include($this->root_path . 'includes/functions_upload.' . $this->php_ext);
 		}
 		$this->upload = new \fileupload();
 		$this->upload->fileupload('', self::get_allowed_types(), (4 * $this->config['phpbb_gallery_max_filesize']));
-
-		$this->tools = new \phpbbgallery\core\file\file($this->config['phpbb_gallery_gdlib_version']);
 
 //		$this->album_id = (int) $album_id;
 //		$this->file_limit = (int) $num_files;
@@ -115,7 +116,7 @@ class upload
 	{
 		if (!class_exists('\compress_zip'))
 		{
-			include($this->root_path . 'includes/functions_compress' . $this->php_ext);
+			include($this->root_path . 'includes/functions_compress.' . $this->php_ext);
 		}
 
 		$tmp_dir = $phpbb_ext_gallery->url->path('import') . 'tmp_' . md5(unique_id()) . '/';
@@ -239,18 +240,18 @@ class upload
 		$file_link = $phpbb_ext_gallery->url->path('upload') . $this->image_data[$image_id]['image_filename'];
 
 		$vars = array('additional_sql_data', 'image_data', 'file_link');
-		extract($this->phpbb_dispatcher->trigger_event('gallery.core.upload.update_image_before', compact($vars)));
+		extract($this->dispatcher->trigger_event('gallery.core.upload.update_image_before', compact($vars)));
 
 		// Rotate image
 		if (!$this->prepare_file_update($image_id))
 		{
 			$vars = array('additional_sql_data');
-			extract($this->phpbb_dispatcher->trigger_event('gallery.core.upload.update_image_nofilechange', compact($vars)));
+			extract($this->dispatcher->trigger_event('gallery.core.upload.update_image_nofilechange', compact($vars)));
 		}
 
 		$sql_ary = array_merge($sql_ary, $additional_sql_data);
 
-		$sql = 'UPDATE ' . GALLERY_IMAGES_TABLE . ' 
+		$sql = 'UPDATE ' . $this->table_images . '
 			SET ' . $this->db->sql_build_array('UPDATE', $sql_ary) . '
 			WHERE image_id = ' . $image_id;
 		$this->db->sql_query($sql);
@@ -293,7 +294,7 @@ class upload
 		$file = $this->file;
 
 		$vars = array('additional_sql_data', 'file');
-		extract($this->phpbb_dispatcher->trigger_event('gallery.core.upload.prepare_file_before', compact($vars)));
+		extract($this->dispatcher->trigger_event('gallery.core.upload.prepare_file_before', compact($vars)));
 
 		$this->tools->set_image_options($phpbb_ext_gallery->config->get('max_filesize'), $phpbb_ext_gallery->config->get('max_height'), $phpbb_ext_gallery->config->get('max_width'));
 		$this->tools->set_image_data($this->file->destination_file, '', $this->file->filesize, true);
@@ -400,7 +401,7 @@ class upload
 			'image_desc_bitfield'	=> '',
 		), $additional_sql_ary);
 
-		$sql = 'INSERT INTO ' . GALLERY_IMAGES_TABLE . ' ' . $this->db->sql_build_array('INSERT', $sql_ary);
+		$sql = 'INSERT INTO ' . $this->table_images . ' ' . $this->db->sql_build_array('INSERT', $sql_ary);
 		$this->db->sql_query($sql);
 
 		$image_id = (int) $this->db->sql_nextid();
@@ -417,7 +418,7 @@ class upload
 		$prunetime = (int) (($time) ? $time : (time() - 1800));
 
 		$sql = 'SELECT image_id, image_filename
-			FROM ' . GALLERY_IMAGES_TABLE . '
+			FROM ' . $this->table_images . '
 			WHERE image_status = ' . phpbb_ext_gallery_core_image::STATUS_ORPHAN . '
 				AND image_time < ' . $prunetime;
 		$result = $this->db->sql_query($sql);
@@ -566,7 +567,7 @@ class upload
 		if (empty($image_ids)) return;
 
 		$sql = 'SELECT *
-			FROM ' . GALLERY_IMAGES_TABLE . '
+			FROM ' . $this->table_images . '
 			WHERE image_status = ' . phpbb_ext_gallery_core_image::STATUS_ORPHAN . '
 				AND ' . $this->db->sql_in_set('image_id', $image_ids);
 		$result = $this->db->sql_query($sql);

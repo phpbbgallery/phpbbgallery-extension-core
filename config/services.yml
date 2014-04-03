@@ -62,7 +62,7 @@ services:
         arguments:
             - @cache
             - @dbal.conn
-    phpbbgallery.core.file.tool:
+    phpbbgallery.core.file.tools:
         class: phpbbgallery\core\file\file
         arguments:
             - 2
@@ -87,6 +87,17 @@ services:
             - %core.php_ext%
         tags:
             - { name: event.listener }
+    phpbbgallery.core.upload:
+        class: phpbbgallery\core\upload
+        arguments:
+            - @config
+            - @dbal.conn
+            - @dispatcher
+            - @user
+            - @phpbbgallery.core.file.tools
+            - %tables.phpbbgallery.images%
+            - %core.root_path%
+            - %core.php_ext%
     phpbbgallery.core.user:
         class: phpbbgallery\core\user
         arguments:
@@ -117,7 +128,7 @@ services:
             - @user
             - @phpbbgallery.core.auth
             - @phpbbgallery.core.user
-            - @phpbbgallery.core.file.tool
+            - @phpbbgallery.core.file.tools
             - %phpbbgallery.core.file.source%
             - %phpbbgallery.core.file.medium%
             - %phpbbgallery.core.file.mini%
@@ -199,4 +210,5 @@ services:
             - @phpbbgallery.core.album.display
             - @phpbbgallery.core.album.loader
             - @phpbbgallery.core.auth
+            - @phpbbgallery.core.upload
             - %tables.phpbbgallery.images%

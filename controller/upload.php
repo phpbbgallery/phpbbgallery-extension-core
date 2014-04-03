@@ -36,6 +36,9 @@ class upload
 	/* @var \phpbbgallery\core\auth\auth */
 	protected $gallery_auth;
 
+	/* @var \phpbbgallery\core\upload */
+	protected $upload;
+
 	/* @var string */
 	protected $table_images;
 
@@ -61,7 +64,7 @@ class upload
 	 * @param \phpbbgallery\core\auth\auth		$auth	Gallery auth object
 	 * @param string						$images_table	Gallery images table
 	 */
-	public function __construct(\phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\log\log $log, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\album\display $display, \phpbbgallery\core\album\loader $loader, \phpbbgallery\core\auth\auth $gallery_auth, $images_table)
+	public function __construct(\phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\log\log $log, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\album\display $display, \phpbbgallery\core\album\loader $loader, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\upload $upload, $images_table)
 	{
 		$this->config = $config;
 		$this->helper = $helper;
@@ -73,6 +76,7 @@ class upload
 		$this->display = $display;
 		$this->loader = $loader;
 		$this->gallery_auth = $gallery_auth;
+		$this->upload = $upload;
 		$this->table_images = $images_table;
 	}
 
@@ -131,6 +135,7 @@ class upload
 			return $error_page;
 		}
 
+		add_form_key('gallery');
 		$error_msgs = '';
 		$submit = $this->request->is_set_post('submit');
 		$upload_files_limit = ($user_images === false) ? $this->config['phpbb_gallery_num_uploads'] : min(($this->gallery_auth->acl_check('i_count', $this->album_id, $owner_id) - $user_images), $this->config['phpbb_gallery_num_uploads']);
@@ -141,7 +146,7 @@ class upload
 			$this->process_upload();
 		}
 
-		if (!$submit || (isset($process) && !$process->uploaded_files))
+		if (!$submit || !$this->upload->uploaded_files)
 		{
 			for ($i = 0; $i < $upload_files_limit; $i++)
 			{
@@ -156,7 +161,7 @@ class upload
 				'S_MAX_FILESIZE'		=> get_formatted_filesize($this->config['phpbb_gallery_max_filesize']),
 				'S_MAX_WIDTH'			=> $this->config['phpbb_gallery_max_width'],
 				'S_MAX_HEIGHT'			=> $this->config['phpbb_gallery_max_height'],
-				'S_ALLOWED_FILETYPES'	=> implode(', ', \phpbbgallery\core\upload::get_allowed_types(true)),
+				'S_ALLOWED_FILETYPES'	=> implode(', ', $this->upload->get_allowed_types(true)),
 				'S_ALBUM_ACTION'		=> $this->helper->route('phpbbgallery_album_upload', array('album_id' => $this->album_id)),
 				'S_UPLOAD'				=> true,
 				'S_ALLOW_ROTATE'		=> ($this->config['phpbb_gallery_allow_rotate'] && function_exists('imagerotate')),
@@ -181,9 +186,9 @@ class upload
 			trigger_error('FORM_INVALID');
 		}
 
-		$process = new \phpbbgallery\core\upload($album_id, $upload_files_limit);
-		$process->set_rotating($this->request->variable('rotate', array(0)));
-		$process->set_allow_comments($this->request->variable('allow_comments', false));
+		//$this->upload->($album_id, $upload_files_limit);
+		$this->upload->set_rotating($this->request->variable('rotate', array(0)));
+		$this->upload->set_allow_comments($this->request->variable('allow_comments', false));
 
 		if (!$this->user->data['is_registered'])
 		{
@@ -195,11 +200,11 @@ class upload
 			}
 			else
 			{
-				$process->set_username($username);
+				$this->upload->set_username($username);
 			}
 		}
 
-		if (empty($process->errors))
+		if (empty($this->upload->errors))
 		{
 
 			for ($file_count = 0; $file_count < $upload_files_limit; $file_count++)
@@ -209,13 +214,13 @@ class upload
 				 * call some functions (rotate, resize, ...)
 				 * and store the image to the database
 				 */
-				$process->upload_file($file_count);
+				$this->upload->upload_file($file_count);
 			}
 		}
 
-		if (!$process->uploaded_files)
+		if (!$this->upload->uploaded_files)
 		{
-			$process->new_error($this->user->lang['UPLOAD_NO_FILE']);
+			$this->upload->new_error($this->user->lang['UPLOAD_NO_FILE']);
 		}
 		else
 		{
@@ -224,7 +229,7 @@ class upload
 			$submit = false;
 		}
 
-		$error = implode('<br />', $process->errors);
+		$error = implode('<br />', $this->upload->errors);
 	}
 
 	/**
