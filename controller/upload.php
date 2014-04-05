@@ -54,6 +54,12 @@ class upload
 	/** @var string */
 	protected $mode;
 
+	/** @var string */
+	protected $root_path;
+
+	/** @var string */
+	protected $php_ext;
+
 	/**
 	 * Constructor
 	 *
@@ -70,7 +76,7 @@ class upload
 	 * @param \phpbbgallery\core\auth\auth		$auth	Gallery auth object
 	 * @param string						$images_table	Gallery images table
 	 */
-	public function __construct(\phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\log\log $log, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\album\display $display, \phpbbgallery\core\album\loader $loader, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\upload $upload, $images_table)
+	public function __construct(\phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\log\log $log, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\album\display $display, \phpbbgallery\core\album\loader $loader, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\upload $upload, $images_table, $phpbb_root_path, $phpEx)
 	{
 		$this->config = $config;
 		$this->helper = $helper;
@@ -84,6 +90,17 @@ class upload
 		$this->gallery_auth = $gallery_auth;
 		$this->upload = $upload;
 		$this->table_images = $images_table;
+		$this->root_path = $phpbb_root_path;
+		$this->php_ext = $phpEx;
+
+		if (!function_exists('display_custom_bbcodes'))
+		{
+			include($this->root_path . 'includes/functions_display.' . $this->php_ext);
+		}
+		if (!function_exists('generate_smilies'))
+		{
+			include($this->root_path . 'includes/functions_posting.' . $this->php_ext);
+		}
 	}
 
 	/**
@@ -99,6 +116,7 @@ class upload
 		$this->album_id = (int) $album_id;
 		$this->mode = $mode;
 		$this->user->add_lang_ext('phpbbgallery/core', array('gallery'));
+		$this->user->add_lang('posting');
 
 		try
 		{
@@ -131,13 +149,8 @@ class upload
 		}
 
 		$error_page = $this->check_user_quote($this->album_id, $owner_id);
-
-		$user_images = 0;
-		if ($error_page === false || is_int($error_page))
-		{
-			$user_images = $error_page;
-		}
-		else
+		$user_images = (int) $error_page;
+		if ($error_page !== false && !is_int($error_page))
 		{
 			return $error_page;
 		}
@@ -145,19 +158,22 @@ class upload
 		add_form_key('gallery');
 		$error_msgs = '';
 		$this->submit = $this->request->is_set_post('submit');
-		$upload_files_limit = ($user_images === false) ? $this->config['phpbb_gallery_num_uploads'] : min(($this->gallery_auth->acl_check('i_count', $this->album_id, $owner_id) - $user_images), $this->config['phpbb_gallery_num_uploads']);
 
-
-		if ($this->submit)
+		if ($this->mode == 'upload')
 		{
-			$error_msgs = $this->process_upload($upload_files_limit);
-		}
+			$upload_files_limit = ($user_images === false) ? $this->config['phpbb_gallery_num_uploads'] : min(($this->gallery_auth->acl_check('i_count', $this->album_id, $owner_id) - $user_images), $this->config['phpbb_gallery_num_uploads']);
 
-		if (!$this->submit || !$this->upload->uploaded_files)
-		{
-			for ($i = 0; $i < $upload_files_limit; $i++)
+			if ($this->submit)
 			{
-				$this->template->assign_block_vars('upload_image', array());
+				$error_msgs = $this->process_upload($upload_files_limit);
+			}
+
+			if (!$this->submit || !$this->upload->uploaded_files)
+			{
+				for ($i = 0; $i < $upload_files_limit; $i++)
+				{
+					$this->template->assign_block_vars('upload_image', array());
+				}
 			}
 		}
 
@@ -177,6 +193,70 @@ class upload
 //				'S_COMMENTS_ENABLED'	=> $this->config['phpbb_gallery_allow_comments'] && $this->config['phpbb_gallery_comment_user_control'],
 //				'S_ALLOW_COMMENTS'		=> true,
 //				'L_ALLOW_COMMENTS'		=> $this->user->lang('ALLOW_COMMENTS_ARY', $upload_files_limit),
+			));
+		}
+
+		if ($this->mode == 'upload_edit')
+		{
+			// Load BBCodes and smilies data
+			$bbcode_status	= ($this->config['allow_bbcode']) ? true : false;
+			$smilies_status	= ($this->config['allow_smilies']) ? true : false;
+			$img_status		= ($bbcode_status) ? true : false;
+			$url_status		= ($this->config['allow_post_links']) ? true : false;
+			$flash_status	= false;
+			$quote_status	= true;
+
+			$this->template->assign_vars(array(
+				'BBCODE_STATUS'			=> $this->user->lang((($bbcode_status) ? 'BBCODE_IS_ON' : 'BBCODE_IS_OFF'), '<a href="' . append_sid($this->root_path . 'faq.' . $this->php_ext, 'mode=bbcode') . '">', '</a>'),
+				'IMG_STATUS'			=> ($img_status) ? $this->user->lang['IMAGES_ARE_ON'] : $this->user->lang['IMAGES_ARE_OFF'],
+				'FLASH_STATUS'			=> ($flash_status) ? $this->user->lang['FLASH_IS_ON'] : $this->user->lang['FLASH_IS_OFF'],
+				'SMILIES_STATUS'		=> ($smilies_status) ? $this->user->lang['SMILIES_ARE_ON'] : $this->user->lang['SMILIES_ARE_OFF'],
+				'URL_STATUS'			=> ($bbcode_status && $url_status) ? $this->user->lang['URL_IS_ON'] : $this->user->lang['URL_IS_OFF'],
+
+				'S_BBCODE_ALLOWED'		=> $bbcode_status,
+				'S_SMILIES_ALLOWED'		=> $smilies_status,
+				'S_LINKS_ALLOWED'		=> $url_status,
+				'S_BBCODE_IMG'			=> $img_status,
+				'S_BBCODE_URL'			=> $url_status,
+				'S_BBCODE_FLASH'		=> $flash_status,
+				'S_BBCODE_QUOTE'		=> $quote_status,
+			));
+
+			// Build custom bbcodes array
+			display_custom_bbcodes();
+
+			// Build smilies array
+			generate_smilies('inline', 0);
+
+			$num_images = 0;
+			foreach ($this->upload->images as $image_id)
+			{
+				$data = $this->upload->image_data[$image_id];
+				$this->template->assign_block_vars('image', array(
+					'U_IMAGE'		=> $this->helper->route('phpbbgallery_image_file_mini', array('image_id' => $image_id)),
+					'IMAGE_NAME'	=> $data['image_name'],
+					'IMAGE_DESC'	=> $data['image_desc'],
+				));
+				$num_images++;
+			}
+
+			$s_hidden_fields = build_hidden_fields(array(
+				'upload_ids'	=> $this->upload->generate_hidden_fields(),
+			));
+
+			$s_can_rotate = ($this->config['phpbb_gallery_allow_rotate'] && function_exists('imagerotate'));
+			$this->template->assign_vars(array(
+				'ERROR'				=> $error_msgs,
+				'S_ALBUM_ACTION'	=> $this->helper->route('phpbbgallery_album_upload_edit', array('album_id' => $album_id)),
+				'S_UPLOAD_EDIT'		=> true,
+				'S_ALLOW_ROTATE'	=> $s_can_rotate,
+
+				'S_USERNAME'		=> (!$this->user->data['is_registered']) ? $username : '',
+				'NUM_IMAGES'		=> $num_images,
+				'COLOUR_ROWSPAN'	=> ($s_can_rotate) ? $num_images * 3 : $num_images * 2,
+
+				'L_DESCRIPTION_LENGTH'	=> $this->user->lang('DESCRIPTION_LENGTH', $this->config['phpbb_gallery_description_length']),
+				'S_HIDDEN_FIELDS'	=> $s_hidden_fields,
 			));
 		}
 

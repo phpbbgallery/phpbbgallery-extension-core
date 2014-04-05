@@ -221,3 +221,5 @@ services:
             - @phpbbgallery.core.auth
             - @phpbbgallery.core.upload
             - %tables.phpbbgallery.images%
+            - %core.root_path%
+            - %core.php_ext%

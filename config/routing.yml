@@ -14,6 +14,9 @@ phpbbgallery_album_page:
 phpbbgallery_album_upload:
     pattern: /gallery/album/{album_id}/upload
     defaults: { _controller: phpbbgallery.core.controller.upload:base, mode: upload }
+phpbbgallery_album_upload_edit:
+    pattern: /gallery/album/{album_id}/upload/continue
+    defaults: { _controller: phpbbgallery.core.controller.upload:base, mode: upload_edit }
 
 phpbbgallery_image:
     pattern: /gallery/image/{image_id}
