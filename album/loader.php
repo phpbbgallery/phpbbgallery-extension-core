@@ -12,7 +12,7 @@ namespace phpbbgallery\core\album;
 
 class loader
 {
-	/* @var \phpbb\db\driver\driver */
+	/* @var \phpbb\db\driver\driver_interface */
 	protected $db;
 
 	/* @var \phpbb\user */
@@ -27,11 +27,11 @@ class loader
 	/**
 	* Constructor
 	*
-	* @param \phpbb\db\driver\driver	$db			Database object
+	* @param \phpbb\db\driver\driver_interface	$db	Database object
 	* @param \phpbb\user				$user		User object
 	* @param string					$albums_table	Gallery albums table
 	*/
-	public function __construct(\phpbb\db\driver\driver $db, \phpbb\user $user, $albums_table)
+	public function __construct(\phpbb\db\driver\driver_interface $db, \phpbb\user $user, $albums_table)
 	{
 		$this->db = $db;
 		$this->user = $user;

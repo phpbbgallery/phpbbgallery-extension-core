@@ -15,7 +15,7 @@ abstract class image_action
 	/* @var \phpbb\controller\helper */
 	protected $helper;
 
-	/* @var \phpbb\db\driver\driver */
+	/* @var \phpbb\db\driver\driver_interface */
 	protected $db;
 
 	/* @var \phpbb\request\request */

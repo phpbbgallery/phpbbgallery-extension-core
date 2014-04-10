@@ -16,7 +16,7 @@ class cache
 	private $phpbb_cache;
 	private $phpbb_db;
 
-	public function __construct(\phpbb\cache\service $cache, \phpbb\db\driver\driver $db)
+	public function __construct(\phpbb\cache\service $cache, \phpbb\db\driver\driver_interface $db)
 	{
 		$this->phpbb_cache = $cache;
 		$this->phpbb_db = $db;

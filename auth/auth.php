@@ -47,7 +47,7 @@ class auth
 
 	/**
 	* Database object
-	* @var \phpbb\db\driver\driver
+	* @var \phpbb\db\driver\driver_interface
 	*/
 	protected $db;
 
@@ -79,13 +79,13 @@ class auth
 	* Construct
 	*
 	* @param	\phpbbgallery\core\cache	$cache	Cache object
-	* @param	\phpbb\db\driver\driver	$db			Database object
+	* @param	\phpbb\db\driver\driver_interface	$db	Database object
 	* @param	\phpbbgallery\core\user	$user		Gallery user object
 	* @param	string			$permissions_table	Gallery permissions table
 	* @param	string			$roles_table		Gallery permission roles table
 	* @param	string			$users_table		Gallery users table
 	*/
-	public function __construct(\phpbbgallery\core\cache $cache, \phpbb\db\driver\driver $db, \phpbbgallery\core\user $user, $permissions_table, $roles_table, $users_table)
+	public function __construct(\phpbbgallery\core\cache $cache, \phpbb\db\driver\driver_interface $db, \phpbbgallery\core\user $user, $permissions_table, $roles_table, $users_table)
 	{
 		$this->cache = $cache;
 		$this->db = $db;

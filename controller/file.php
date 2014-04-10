@@ -15,7 +15,7 @@ class file
 	/* @var \phpbb\config\config */
 	protected $config;
 
-	/* @var \phpbb\db\driver\driver */
+	/* @var \phpbb\db\driver\driver_interface */
 	protected $db;
 
 	/* @var \phpbb\user */
@@ -64,13 +64,13 @@ class file
 	* Constructor
 	*
 	* @param \phpbb\config\config		$config		Config object
-	* @param \phpbb\db\driver\driver	$db			Database object
+	* @param \phpbb\db\driver\driver_interface	$db	Database object
 	* @param \phpbb\user				$user		User object
 	* @param \phpbbgallery\core\album\display	$display	Albums display object
 	* @param \phpbbgallery\core\auth\auth	$gallery_auth	Gallery auth object
 	* @param \phpbbgallery\core\user	$gallery_user	Gallery user object
 	*/
-	public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver $db, \phpbb\user $user, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\user $gallery_user, \phpbbgallery\core\file\file $tool, $source_path, $medium_path, $mini_path, $watermark_file, $albums_table, $images_table)
+	public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, \phpbb\user $user, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\user $gallery_user, \phpbbgallery\core\file\file $tool, $source_path, $medium_path, $mini_path, $watermark_file, $albums_table, $images_table)
 	{
 		$this->config = $config;
 		$this->db = $db;

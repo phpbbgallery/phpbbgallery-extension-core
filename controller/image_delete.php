@@ -19,7 +19,7 @@ class image_delete extends image_action
 	* Constructor
 	*
 	* @param \phpbb\controller\helper	$helper		Controller helper object
-	* @param \phpbb\db\driver\driver	$db			Database object
+	* @param \phpbb\db\driver\driver_interface	$db	Database object
 	* @param \phpbb\event\dispatcher	$dispatcher	Event dispatcher object
 	* @param \phpbb\log\log				$log		Log object
 	* @param \phpbb\request\request		$request	Request object
@@ -30,7 +30,7 @@ class image_delete extends image_action
 	* @param \phpbbgallery\core\auth\auth		$auth	Gallery auth object
 	* @param string						$images_table	Gallery images table
 	*/
-	public function __construct(\phpbb\controller\helper $helper, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\log\log $log, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\album\display $display, \phpbbgallery\core\album\loader $loader, \phpbbgallery\core\auth\auth $gallery_auth, $images_table)
+	public function __construct(\phpbb\controller\helper $helper, \phpbb\db\driver\driver_interface $db, \phpbb\event\dispatcher $dispatcher, \phpbb\log\log $log, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\album\display $display, \phpbbgallery\core\album\loader $loader, \phpbbgallery\core\auth\auth $gallery_auth, $images_table)
 	{
 		$this->helper = $helper;
 		$this->db = $db;

@@ -21,7 +21,7 @@ class image
 	/* @var \phpbb\controller\helper */
 	protected $helper;
 
-	/* @var \phpbb\db\driver\driver */
+	/* @var \phpbb\db\driver\driver_interface */
 	protected $db;
 
 	/* @var \phpbb\event\dispatcher */
@@ -66,7 +66,7 @@ class image
 	* @param \phpbb\auth\auth			$auth		Auth object
 	* @param \phpbb\config\config		$config		Config object
 	* @param \phpbb\controller\helper	$helper		Controller helper object
-	* @param \phpbb\db\driver\driver	$db			Database object
+	* @param \phpbb\db\driver\driver_interface	$db	Database object
 	* @param \phpbb\event\dispatcher	$dispatcher	Event dispatcher object
 	* @param \phpbb\pagination			$pagination	Pagination object
 	* @param \phpbb\template\template	$template	Template object
@@ -79,7 +79,7 @@ class image
 	* @param string						$albums_table	Gallery albums table
 	* @param string						$users_table	Gallery users table
 	*/
-	public function __construct(\phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\pagination $pagination, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\album\display $display, \phpbbgallery\core\album\loader $loader, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\auth\level $auth_level, $albums_table, $images_table, $users_table)
+	public function __construct(\phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver_interface $db, \phpbb\event\dispatcher $dispatcher, \phpbb\pagination $pagination, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\album\display $display, \phpbbgallery\core\album\loader $loader, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\auth\level $auth_level, $albums_table, $images_table, $users_table)
 	{
 		$this->auth = $auth;
 		$this->config = $config;

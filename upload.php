@@ -57,7 +57,7 @@ class upload
 	/**
 	* Constructor
 	*/
-	public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\user $user, \phpbbgallery\core\file\file $tools, $images_table, $import_noroot_dir, $import_dir, $source_noroot_dir, $source_dir, $medium_dir, $mini_dir, $phpbb_root_path, $phpEx)
+	public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, \phpbb\event\dispatcher $dispatcher, \phpbb\user $user, \phpbbgallery\core\file\file $tools, $images_table, $import_noroot_dir, $import_dir, $source_noroot_dir, $source_dir, $medium_dir, $mini_dir, $phpbb_root_path, $phpEx)
 	{
 		$this->config = $config;
 		$this->db = $db;

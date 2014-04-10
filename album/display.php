@@ -30,7 +30,7 @@ class display
 	protected $table_moderators;
 	protected $table_tracking;
 
-	public function __construct(\phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver $db, \phpbb\pagination $pagination, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\image\utility $gallery_image, \phpbbgallery\core\user $gallery_user, $root_path, $php_ext, $albums_table, $contests_table, $moderators_table, $tracking_table)
+	public function __construct(\phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver_interface $db, \phpbb\pagination $pagination, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\image\utility $gallery_image, \phpbbgallery\core\user $gallery_user, $root_path, $php_ext, $albums_table, $contests_table, $moderators_table, $tracking_table)
 	{
 		$this->auth = $auth;
 		$this->config = $config;

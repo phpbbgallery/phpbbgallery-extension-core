@@ -35,7 +35,7 @@ class core
 	* Constructor
 	*/
 	public function __construct(\phpbb\auth\auth $auth, \phpbb\cache\service $cache,
-		\phpbb\config\config $config, \phpbb\db\driver\driver $db, \phpbb\template\template $template,
+		\phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, \phpbb\template\template $template,
 		\phpbb\user $user, $phpEx, $phpbb_root_path)
 	{
 		$this->phpbb_auth = $auth;

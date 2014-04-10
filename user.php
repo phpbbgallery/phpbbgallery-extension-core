@@ -20,7 +20,7 @@ class user
 
 	/**
 	 * Database object
-	 * @var \phpbb\db\driver\driver
+	 * @var \phpbb\db\driver\driver_interface
 	 */
 	protected $db;
 
@@ -49,11 +49,11 @@ class user
 	/**
 	 * Constructor
 	 *
-	 * @param	\phpbb\db\driver\driver	$db			Database object
+	 * @param	\phpbb\db\driver\driver_interface	$db			Database object
 	 * @param	\phpbb\event\dispatcher	$dispatcher	Event dispatcher object
 	 * @param	string					$table_name	Gallery users table
 	 */
-	public function __construct(\phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, $table_name)
+	public function __construct(\phpbb\db\driver\driver_interface $db, \phpbb\event\dispatcher $dispatcher, $table_name)
 	{
 		$this->db			= $db;
 		$this->dispatcher	= $dispatcher;

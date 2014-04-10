@@ -16,7 +16,7 @@ class report
 	const OPEN = 1;
 	const LOCKED = 2;
 
-	/** @var \phpbb\db\driver\driver */
+	/** @var \phpbb\db\driver\driver_interface */
 	protected $db;
 
 	/** @var string */
@@ -25,7 +25,7 @@ class report
 	/** @var string */
 	protected $table_reports;
 
-	public function __construct(\phpbb\db\driver\driver $db, $image_table, $report_table)
+	public function __construct(\phpbb\db\driver\driver_interface $db, $image_table, $report_table)
 	{
 		$this->db = $db;
 		$this->table_images = $image_table;

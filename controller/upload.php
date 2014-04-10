@@ -15,7 +15,7 @@ class upload
 	/** @var \phpbb\controller\helper */
 	protected $helper;
 
-	/** @var \phpbb\db\driver\driver */
+	/** @var \phpbb\db\driver\driver_interface */
 	protected $db;
 
 	/** @var \phpbb\request\request */
@@ -65,7 +65,7 @@ class upload
 	 *
 	 * @param \phpbb\config\config		$config		Config object
 	 * @param \phpbb\controller\helper	$helper		Controller helper object
-	 * @param \phpbb\db\driver\driver	$db			Database object
+	 * @param \phpbb\db\driver\driver_interface	$db	Database object
 	 * @param \phpbb\event\dispatcher	$dispatcher	Event dispatcher object
 	 * @param \phpbb\log\log				$log		Log object
 	 * @param \phpbb\request\request		$request	Request object
@@ -76,7 +76,7 @@ class upload
 	 * @param \phpbbgallery\core\auth\auth		$auth	Gallery auth object
 	 * @param string						$images_table	Gallery images table
 	 */
-	public function __construct(\phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver $db, \phpbb\event\dispatcher $dispatcher, \phpbb\log\log $log, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\album\display $display, \phpbbgallery\core\album\loader $loader, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\upload $upload, $images_table, $phpbb_root_path, $phpEx)
+	public function __construct(\phpbb\config\config $config, \phpbb\controller\helper $helper, \phpbb\db\driver\driver_interface $db, \phpbb\event\dispatcher $dispatcher, \phpbb\log\log $log, \phpbb\request\request $request, \phpbb\template\template $template, \phpbb\user $user, \phpbbgallery\core\album\display $display, \phpbbgallery\core\album\loader $loader, \phpbbgallery\core\auth\auth $gallery_auth, \phpbbgallery\core\upload $upload, $images_table, $phpbb_root_path, $phpEx)
 	{
 		$this->config = $config;
 		$this->helper = $helper;
